@@ -18,6 +18,10 @@
         <hr style="margin:20px 0;border-color:var(--border);">
         <div>
             <div class="form-group">
+                <label for="userEmail">邮箱</label>
+                <input type="email" id="userEmail" placeholder="your@email.com">
+            </div>
+            <div class="form-group">
                 <label for="verifyCode">邀请码</label>
                 <input type="text" id="verifyCode" placeholder="输入邀请码"
                        style="width:100%;font-size:1.1rem;letter-spacing:2px;text-transform:uppercase;">
@@ -64,6 +68,7 @@ async function doVerify() {
     form.append('username', regUsername);
     form.append('password', regPassword);
     form.append('invite_code', code);
+    form.append('email', document.getElementById('userEmail').value.trim());
 
     try {
         const r = await fetch('/api/auth/register-with-invite', { method: 'POST', body: form });

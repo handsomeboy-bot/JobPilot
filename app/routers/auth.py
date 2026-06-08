@@ -118,36 +118,40 @@ async def api_register_with_invite(
     username: str = Form(...),
     password: str = Form(...),
     invite_code: str = Form(...),
+    email: str = Form(""),
     db: Session = Depends(get_db),
 ):
     """邀请码注册：用户名+密码+邀请码 → 从邀请码获取邮箱 → 创建账号"""
     if len(password) < 6:
         return JSONResponse({"ok": False, "msg": "密码至少6位"}, 400)
 
-    # 验证邀请码并获取邮箱
     valid = find_valid_invite(invite_code)
     if not valid:
         return JSONResponse({"ok": False, "msg": "邀请码无效或已被使用"}, 403)
 
-    email = valid["email"]
-    if not email or email == "通用邀请码":
-        return JSONResponse({"ok": False, "msg": "此邀请码未绑定邮箱，请使用邮箱专属邀请码"}, 400)
+    invite_email = valid.get("email", "")
+    is_global = valid.get("type") == "global" or invite_email == "通用邀请码"
 
-    # 检查邮箱是否已注册
+    if is_global:
+        # 通用邀请码：用户必须提供邮箱
+        if not email:
+            return JSONResponse({"ok": False, "msg": "请填写邮箱"}, 400)
+    else:
+        email = invite_email  # 邮箱专属码：用邀请码绑定的邮箱
+
     if db.query(User).filter(User.email == email).first():
         return JSONResponse({"ok": False, "msg": "该邮箱已注册"}, 400)
 
-    # 检查用户名
     if db.query(User).filter(User.username == username).first():
         return JSONResponse({"ok": False, "msg": "该昵称已被使用，请换一个"}, 400)
 
-    # 创建用户
     user = User(email=email, username=username, hashed_password=hash_password(password))
     db.add(user)
     db.commit()
     db.refresh(user)
 
-    mark_invite_used(invite_code)
+    if not is_global:
+        mark_invite_used(invite_code)
 
     token = create_token(user.id)
     resp = JSONResponse({"ok": True, "msg": "注册成功"})
