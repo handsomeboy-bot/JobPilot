@@ -287,3 +287,28 @@ async def api_reset_password(request: Request):
     db.close()
 
     return {"ok": True, "msg": "密码重置成功，请登录"}
+
+
+@router.post("/reset-password-direct")
+async def api_reset_password_direct(request: Request):
+    """直接重置密码 — 输入邮箱 + 新密码（无需验证码）"""
+    body = await request.json()
+    email = body.get("email", "").strip()
+    new_password = body.get("new_password", "").strip()
+
+    if not email or not new_password:
+        return JSONResponse({"ok": False, "msg": "请填写完整信息"}, 400)
+    if len(new_password) < 6:
+        return JSONResponse({"ok": False, "msg": "新密码至少6位"}, 400)
+
+    db = next(get_db())
+    user = db.query(User).filter(User.email == email).first()
+    if not user:
+        db.close()
+        return JSONResponse({"ok": False, "msg": "该邮箱未注册"}, 404)
+
+    user.hashed_password = hash_password(new_password)
+    db.commit()
+    db.close()
+
+    return {"ok": True, "msg": "密码重置成功，请登录"}
