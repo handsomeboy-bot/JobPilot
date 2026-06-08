@@ -57,6 +57,8 @@ async function doVerify() {
     const err = document.getElementById('verifyError');
     const btn = document.getElementById('verifyBtn');
 
+    const regEmail = document.getElementById('userEmail').value.trim();
+    if (!regEmail) { err.textContent = '请输入邮箱'; return; }
     if (!code) { err.textContent = '请输入邀请码'; return; }
 
     btn.disabled = true; btn.textContent = '验证中...'; err.textContent = '';
@@ -68,7 +70,7 @@ async function doVerify() {
     form.append('username', regUsername);
     form.append('password', regPassword);
     form.append('invite_code', code);
-    form.append('email', document.getElementById('userEmail').value.trim());
+    form.append('email', regEmail);
 
     try {
         const r = await fetch('/api/auth/register-with-invite', { method: 'POST', body: form });
