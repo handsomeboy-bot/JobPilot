@@ -39,10 +39,24 @@ def save_invite_config(cfg):
 
 
 def load_email_config():
+    cfg = {"enabled": True, "smtp_host": "smtp.qq.com", "smtp_port": 587,
+           "sender": "", "password": "", "receiver": ""}
     if EMAIL_CONFIG_FILE.exists():
-        return json.loads(EMAIL_CONFIG_FILE.read_text(encoding="utf-8"))
-    return {"enabled": False, "smtp_host": "smtp.qq.com", "smtp_port": 587,
-            "sender": "", "password": "", "receiver": ""}
+        cfg.update(json.loads(EMAIL_CONFIG_FILE.read_text(encoding="utf-8")))
+    # 环境变量覆盖（Render 部署用）
+    if os.getenv("SMTP_HOST"):
+        cfg["smtp_host"] = os.getenv("SMTP_HOST")
+    if os.getenv("SMTP_PORT"):
+        cfg["smtp_port"] = int(os.getenv("SMTP_PORT"))
+    if os.getenv("SMTP_SENDER"):
+        cfg["sender"] = os.getenv("SMTP_SENDER")
+    if os.getenv("SMTP_PASSWORD"):
+        cfg["password"] = os.getenv("SMTP_PASSWORD")
+    if os.getenv("SMTP_RECEIVER"):
+        cfg["receiver"] = os.getenv("SMTP_RECEIVER")
+    if os.getenv("SMTP_ENABLED"):
+        cfg["enabled"] = os.getenv("SMTP_ENABLED").lower() in ("true", "1")
+    return cfg
 
 
 def save_email_config(cfg):
