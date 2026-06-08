@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}求职论坛 — JobPilot{% endblock %}
+{% block content %}
+<div class="dashboard-header">
+    <div>
+        <h1>💬 求职论坛</h1>
+        <p class="dash-sub">分享面试经验，一起上岸 🚀</p>
+    </div>
+    <div class="dash-actions">
+        <button class="btn btn-primary" onclick="openNewPost()">+ 发帖</button>
+        <a href="/app" class="btn btn-outline">← 回看板</a>
+    </div>
+</div>
+
+<div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap;">
+    <input type="text" id="forumSearch" placeholder="🔍 搜索帖子..."
+           style="padding:8px 12px;border:1px solid var(--border);border-radius:8px;width:220px;font-size:.85rem;"
+           oninput="loadPosts()">
+    <input type="text" id="forumTag" placeholder="# 标签筛选..."
+           style="padding:8px 12px;border:1px solid var(--border);border-radius:8px;width:180px;font-size:.85rem;"
+           oninput="loadPosts()">
+</div>
+
+<div id="postList">
+    <p style="text-align:center;color:var(--text-muted);padding:40px;">加载中...</p>
+</div>
+
+<div id="postPager" style="display:flex;justify-content:center;gap:8px;margin-top:16px;"></div>
+
+<!-- 发帖弹窗 -->
+<div class="modal-overlay" id="newPostModal">
+    <div class="modal-card modal-wide">
+        <div class="modal-head">
+            <h3>✍️ 发表帖子</h3>
+            <button class="modal-close" onclick="closeNewPost()">&times;</button>
+        </div>
+        <form id="newPostForm" onsubmit="submitPost(event)">
+            <div class="form-group">
+                <label for="postTitle">标题 *</label>
+                <input type="text" id="postTitle" required placeholder="给你的面经起个标题...">
+            </div>
+            <div class="form-group">
+                <label for="postContent">内容 *</label>
+                <textarea id="postContent" rows="8" required placeholder="分享你的面试经验..."></textarea>
+            </div>
+            <div class="form-group">
+                <label for="postTags">标签（逗号分隔）</label>
+                <input type="text" id="postTags" placeholder="如：Java, 算法, 系统设计">
+            </div>
+            <div class="form-group">
+                <label style="display:flex;align-items:center;gap:8px;">
+                    <input type="checkbox" id="postAnonymous"> 匿名发布
+                </label>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">发布帖子</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="/static/js/forum.js"></script>
+{% endblock %}

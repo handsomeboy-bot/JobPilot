@@ -1,0 +1,26 @@
+# 环境变量
+.env
+
+# 数据库
+*.db
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+
+# 运行时文件（含敏感数据）
+notified_interviews.json
+email_config.json
+invite_config.json
+invites.json
+
+# IDE
+.vscode/
+.idea/
+
+# 虚拟环境
+venv/
+env/
+.venv/

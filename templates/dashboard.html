@@ -1,0 +1,396 @@
+{% extends "base.html" %}
+{% block title %}看板 — JobPilot{% endblock %}
+{% block content %}
+<div class="dashboard-header">
+    <div>
+        <h1>📋 {{ user.username }} 的求职看板</h1>
+        <p class="dash-sub">拖拽卡片切换状态 · 双击卡片编辑 · 数据驱动求职</p>
+    </div>
+    <div class="dash-actions">
+        <button class="btn btn-primary" onclick="openAddModal()">+ 新增投递</button>
+        <button class="btn btn-outline" onclick="openInterviews()">📅 面试日程</button>
+        <button class="btn btn-outline" onclick="openNotes()">📝 面经库</button>
+        <button class="btn btn-outline" onclick="openStats()">📊 统计</button>
+        <button class="btn btn-outline" onclick="openAnalytics()">📈 求职洞察</button>
+        <button class="btn btn-outline" onclick="openEmailSettings()">⚙️</button>
+    </div>
+</div>
+
+<!-- 即将到来的面试提醒条 -->
+<div class="reminder-bar" id="reminderBar" style="display:none;">
+    <span>🔔</span>
+    <span id="reminderText"></span>
+    <span style="flex:1;"></span>
+    <button class="btn btn-sm" onclick="openInterviews()">查看详情</button>
+</div>
+
+<!-- Kanban 看板 -->
+<div class="kanban" id="kanban">
+    {% set columns = [
+        ('applied', '📥 已投递'),
+        ('assessment', '📝 测评/笔试'),
+        ('interview', '🎤 面试中'),
+        ('waiting', '⏳ 等结果'),
+        ('offer', '✅ Offer'),
+        ('rejected', '❌ 已挂'),
+    ] %}
+    {% for status_key, status_label in columns %}
+    <div class="kanban-col" data-status="{{ status_key }}">
+        <div class="col-head">
+            <span>{{ status_label }}</span>
+            <span class="col-count" id="count-{{ status_key }}">0</span>
+        </div>
+        <div class="col-body" id="col-{{ status_key }}"></div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- 新增/编辑 弹窗 -->
+<div class="modal-overlay" id="appModal">
+    <div class="modal-card">
+        <div class="modal-head">
+            <h3 id="modalTitle">新增投递</h3>
+            <button class="modal-close" onclick="closeModal()">&times;</button>
+        </div>
+        <form id="appForm" onsubmit="saveApplication(event)">
+            <input type="hidden" id="appId">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="company">公司 *</label>
+                    <input type="text" id="company" required placeholder="如：字节跳动">
+                </div>
+                <div class="form-group">
+                    <label for="position">岗位 *</label>
+                    <input type="text" id="position" required placeholder="如：后端开发工程师">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="location">城市</label>
+                    <input type="text" id="location" placeholder="如：北京">
+                </div>
+                <div class="form-group">
+                    <label for="salary_range">薪资范围</label>
+                    <input type="text" id="salary_range" placeholder="如：25-35K">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="source">渠道</label>
+                    <select id="source">
+                        <option>BOSS直聘</option><option>拉勾</option>
+                        <option>猎聘</option><option>内推</option>
+                        <option>官网</option><option>其他</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="priority">优先级</label>
+                    <select id="priority">
+                        <option value="5">⭐⭐⭐⭐⭐</option>
+                        <option value="4">⭐⭐⭐⭐</option>
+                        <option value="3" selected>⭐⭐⭐</option>
+                        <option value="2">⭐⭐</option>
+                        <option value="1">⭐</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="jd_link">JD链接</label>
+                <input type="url" id="jd_link" placeholder="https://zhaopin.xx.com/job/123">
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="job_category">岗位类别</label>
+                    <select id="job_category">
+                        <option value="">（未分类）</option>
+                        <option>前端</option><option>后端</option><option>全栈</option>
+                        <option>算法</option><option>数据</option><option>AI/大模型</option>
+                        <option>DevOps</option><option>产品经理</option><option>设计</option>
+                        <option>测试</option><option>运营</option><option>其他</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="notes">备注</label>
+                <textarea id="notes" rows="3" placeholder="面试官风格、薪资期望、沟通记录..."></textarea>
+            </div>
+            <div class="form-row" id="rowRejectReason" style="display:none;">
+                <div class="form-group">
+                    <label for="rejection_reason">挂因</label>
+                    <input type="text" id="rejection_reason" placeholder="如：简历未过、一面挂、技术栈不匹配...">
+                </div>
+            </div>
+            <div class="form-row" id="rowOfferSalary" style="display:none;">
+                <div class="form-group">
+                    <label for="offer_salary">Offer 薪资</label>
+                    <input type="text" id="offer_salary" placeholder="如：30K * 15薪">
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block" id="saveBtn">保存</button>
+        </form>
+    </div>
+</div>
+
+<!-- 统计面板弹窗 -->
+<div class="modal-overlay" id="statsModal">
+    <div class="modal-card modal-wide">
+        <div class="modal-head">
+            <h3>📊 求职数据统计</h3>
+            <button class="modal-close" onclick="closeStats()">&times;</button>
+        </div>
+        <div id="statsContent">
+            <div class="stats-grid">
+                <div class="stat-card"><div class="stat-num" id="statTotal">0</div><div class="stat-label">总投递</div></div>
+                <div class="stat-card"><div class="stat-num" id="statInterview">0</div><div class="stat-label">面试中</div></div>
+                <div class="stat-card"><div class="stat-num" id="statOffer">0</div><div class="stat-label">已拿Offer</div></div>
+                <div class="stat-card stat-rate"><div class="stat-num" id="statRate">0%</div><div class="stat-label">初筛通过率</div></div>
+            </div>
+            <div class="stats-charts" id="statsCharts"></div>
+        </div>
+    </div>
+</div>
+
+<!-- 面试日程弹窗 -->
+<div class="modal-overlay" id="interviewsModal">
+    <div class="modal-card modal-wide">
+        <div class="modal-head">
+            <h3>📅 面试日程管理</h3>
+            <div style="display:flex;gap:8px;">
+                <button class="btn btn-sm btn-primary" onclick="openInterviewForm()">+ 添加面试</button>
+                <button class="modal-close" onclick="closeInterviews()">&times;</button>
+            </div>
+        </div>
+        <div id="interviewsContent">
+            <div class="interview-list" id="interviewList">
+                <p style="text-align:center;color:var(--text-muted);padding:40px;">加载中...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 面试编辑弹窗 -->
+<div class="modal-overlay" id="interviewFormModal">
+    <div class="modal-card">
+        <div class="modal-head">
+            <h3 id="ivFormTitle">添加面试</h3>
+            <button class="modal-close" onclick="closeInterviewForm()">&times;</button>
+        </div>
+        <form id="interviewForm" onsubmit="saveInterview(event)">
+            <input type="hidden" id="ivId">
+            <input type="hidden" id="ivAppId">
+            <div class="form-group">
+                <label for="ivAppSelect">关联投递 *</label>
+                <select id="ivAppSelect" required></select>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="ivRound">面试轮次</label>
+                    <select id="ivRound">
+                        <option>一面</option><option>二面</option>
+                        <option>三面</option><option>四面</option>
+                        <option>HR面</option><option>终面</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="ivType">面试类型</label>
+                    <select id="ivType">
+                        <option>技术面</option><option>HR面</option>
+                        <option>群面</option><option>笔试</option>
+                        <option>交叉面</option><option>其他</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="ivTime">面试时间</label>
+                    <input type="datetime-local" id="ivTime" required>
+                </div>
+                <div class="form-group">
+                    <label for="ivInterviewer">面试官</label>
+                    <input type="text" id="ivInterviewer" placeholder="如：张老师">
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="ivNotes">备注</label>
+                <textarea id="ivNotes" rows="2" placeholder="面试链接、注意事项..."></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block" id="ivSaveBtn">保存</button>
+        </form>
+    </div>
+</div>
+<!-- 面经库弹窗 -->
+<div class="modal-overlay" id="notesModal">
+    <div class="modal-card modal-wide">
+        <div class="modal-head">
+            <h3>📝 面经库</h3>
+            <div style="display:flex;gap:8px;align-items:center;">
+                <input type="text" id="notesSearch" placeholder="🔍 搜索面经..."
+                       style="padding:6px 12px;border:1px solid var(--border);border-radius:8px;font-size:.85rem;width:180px;"
+                       oninput="loadNotes()">
+                <button class="modal-close" onclick="closeNotes()">&times;</button>
+            </div>
+        </div>
+        <div id="notesContent">
+            <p style="text-align:center;color:var(--text-muted);padding:40px;">加载中...</p>
+        </div>
+    </div>
+</div>
+
+<!-- 面经编辑弹窗 -->
+<div class="modal-overlay" id="noteFormModal">
+    <div class="modal-card modal-wide">
+        <div class="modal-head">
+            <h3 id="noteFormTitle">写面经</h3>
+            <button class="modal-close" onclick="closeNoteForm()">&times;</button>
+        </div>
+        <form id="noteForm" onsubmit="saveNote(event)">
+            <input type="hidden" id="noteId">
+            <input type="hidden" id="noteInterviewId">
+            <div class="form-group">
+                <label for="noteInterviewSelect">关联面试</label>
+                <select id="noteInterviewSelect" required></select>
+            </div>
+            <div class="form-group">
+                <label>面试问答（Q&A）</label>
+                <div id="qaList"></div>
+                <button type="button" class="btn btn-sm btn-outline" onclick="addQA()" style="margin-top:8px;">+ 添加问答</button>
+            </div>
+            <div class="form-group">
+                <label for="noteReflection">复盘反思</label>
+                <textarea id="noteReflection" rows="3" placeholder="这场面试做得好的地方、需要改进的地方..."></textarea>
+            </div>
+            <div class="form-group">
+                <label for="noteTags">标签（逗号分隔）</label>
+                <input type="text" id="noteTags" placeholder="如：Java基础, 算法, 系统设计, HR面">
+            </div>
+            <button type="button" class="btn btn-outline btn-block" id="publishBtn"
+                    style="display:none;margin-bottom:8px;" onclick="promptPublish()">📢 发布到论坛</button>
+            <button type="submit" class="btn btn-primary btn-block" id="noteSaveBtn">保存面经</button>
+        </form>
+    </div>
+</div>
+
+<!-- 邮件设置弹窗 -->
+<div class="modal-overlay" id="emailModal">
+    <div class="modal-card">
+        <div class="modal-head">
+            <h3>⚙️ 系统设置</h3>
+            <button class="modal-close" onclick="closeEmailSettings()">&times;</button>
+        </div>
+
+        <!-- 邀请码设置 -->
+        <h4 style="margin-bottom:10px;">🔑 邀请码</h4>
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:16px;flex-wrap:wrap;">
+            <label style="white-space:nowrap;font-size:.85rem;">
+                <input type="checkbox" id="inviteEnabled" onchange="toggleInviteInput()">
+                启用邀请码注册
+            </label>
+            <input type="text" id="inviteCodeInput" placeholder="通用邀请码" disabled
+                   style="padding:8px 12px;border:1px solid var(--border);border-radius:8px;width:150px;">
+            <button type="button" class="btn btn-sm btn-primary" onclick="saveInviteConfig()">保存</button>
+        </div>
+
+        <!-- 邮箱邀请 -->
+        <h4 style="margin-bottom:8px;">📨 发送邀请</h4>
+        <p style="font-size:.78rem;color:var(--text-muted);margin-bottom:10px;">输入对方邮箱，系统生成专属邀请码并发送邮件</p>
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap;">
+            <input type="email" id="inviteEmailInput" placeholder="zhangsan@gmail.com"
+                   style="padding:8px 12px;border:1px solid var(--border);border-radius:8px;width:220px;font-size:.85rem;">
+            <button type="button" class="btn btn-sm btn-primary" onclick="sendInvite()">📨 发送邀请</button>
+        </div>
+        <div id="inviteList" style="max-height:120px;overflow-y:auto;margin-bottom:12px;"></div>
+
+        <hr style="border-color:var(--border);margin-bottom:16px;">
+
+        <!-- 修改密码 -->
+        <h4 style="margin-bottom:10px;">🔐 修改密码</h4>
+        <form id="passwordForm" onsubmit="changePassword(event)">
+            <div class="form-group">
+                <label for="oldPassword">旧密码</label>
+                <input type="password" id="oldPassword" required placeholder="输入当前密码">
+            </div>
+            <div class="form-group">
+                <label for="newPassword">新密码</label>
+                <input type="password" id="newPassword" required placeholder="至少6位新密码" minlength="6">
+            </div>
+            <div class="form-group">
+                <label for="newPassword2">确认新密码</label>
+                <input type="password" id="newPassword2" required placeholder="再输入一次新密码" minlength="6">
+            </div>
+            <button type="submit" class="btn btn-primary btn-block" style="margin-bottom:16px;">🔐 修改密码</button>
+        </form>
+
+        <hr style="border-color:var(--border);margin-bottom:16px;">
+
+        <!-- 邮件设置 -->
+        <h4 style="margin-bottom:10px;">📧 邮件通知</h4>
+        <form id="emailForm" onsubmit="saveEmailConfig(event)">
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" id="emailEnabled" style="width:auto;margin-right:8px;">
+                    启用邮件提醒（面试前1小时自动发送）
+                </label>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="smtpHost">SMTP服务器</label>
+                    <input type="text" id="smtpHost" placeholder="smtp.qq.com" value="smtp.qq.com">
+                </div>
+                <div class="form-group">
+                    <label for="smtpPort">端口</label>
+                    <input type="number" id="smtpPort" value="587">
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="emailSender">发件邮箱</label>
+                <input type="email" id="emailSender" placeholder="your@qq.com">
+            </div>
+            <div class="form-group">
+                <label for="emailPassword">授权码（不是邮箱密码）</label>
+                <input type="password" id="emailPassword" placeholder="QQ邮箱→设置→账户→POP3/SMTP→生成授权码">
+                <small style="color:var(--text-muted);">留空则保持原有密码</small>
+            </div>
+            <div class="form-group">
+                <label for="emailReceiver">收件邮箱（留空则发给自己）</label>
+                <input type="email" id="emailReceiver" placeholder="可选，不填默认发到发件邮箱">
+            </div>
+            <div style="display:flex;gap:8px;">
+                <button type="button" class="btn btn-outline" onclick="testEmail()" style="flex:1;">🧪 发送测试邮件</button>
+                <button type="submit" class="btn btn-primary" style="flex:1;">💾 保存配置</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- 求职洞察弹窗 -->
+<div class="modal-overlay" id="analyticsModal">
+    <div class="modal-card modal-wide" style="max-width:860px;">
+        <div class="modal-head">
+            <h3>📈 求职数据洞察</h3>
+            <div style="display:flex;gap:8px;">
+                <button class="btn btn-sm btn-outline" onclick="exportData()">📥 导出CSV</button>
+                <button class="modal-close" onclick="closeAnalytics()">&times;</button>
+            </div>
+        </div>
+        <div id="analyticsContent">
+            <div class="stats-grid" id="analyticsSummary" style="margin-bottom:16px;"></div>
+            <div id="analyticsInsights" style="background:#FFFBEB;border-radius:10px;padding:14px 18px;margin-bottom:18px;font-size:.9rem;line-height:1.8;"></div>
+            <div class="stats-charts">
+                <div class="chart-box" id="chartFunnel" style="height:300px;"></div>
+                <div class="chart-box" id="chartChannel" style="height:300px;"></div>
+            </div>
+            <div class="stats-charts" style="margin-top:14px;">
+                <div class="chart-box" id="chartTimeline" style="height:280px;"></div>
+                <div class="chart-box" id="analyticsCompanies" style="height:280px;overflow-y:auto;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<script src="/static/js/app.js"></script>
+{% endblock %}

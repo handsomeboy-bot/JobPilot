@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}帖子详情 — JobPilot{% endblock %}
+{% block content %}
+<div style="margin-bottom:12px;">
+    <a href="/forum" style="color:var(--primary);font-size:.85rem;">← 返回论坛</a>
+</div>
+
+<div id="postDetail">
+    <p style="text-align:center;color:var(--text-muted);padding:40px;">加载中...</p>
+</div>
+
+<hr style="border-color:var(--border);margin:24px 0;">
+
+<h3 id="commentCount" style="margin-bottom:16px;">💬 评论</h3>
+
+<div id="commentList"></div>
+
+<div style="margin-top:20px;padding:16px;background:var(--bg-muted);border-radius:12px;">
+    <h4 style="margin-bottom:8px;">发表评论</h4>
+    <form id="commentForm" onsubmit="submitComment(event)">
+        <input type="hidden" id="commentParentId" value="">
+        <div id="replyHint" style="display:none;font-size:.8rem;color:var(--text-muted);margin-bottom:6px;">
+            回复 <span id="replyToName"></span>
+            <button type="button" class="btn btn-sm btn-outline" onclick="cancelReply()" style="font-size:.7rem;">取消回复</button>
+        </div>
+        <textarea id="commentContent" rows="3" required placeholder="写下你的想法..." style="width:100%;"></textarea>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;">
+            <label style="font-size:.85rem;display:flex;align-items:center;gap:6px;">
+                <input type="checkbox" id="commentAnonymous"> 匿名评论
+            </label>
+            <button type="submit" class="btn btn-primary">发表评论</button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>const POST_ID = {{ post_id }};</script>
+<script src="/static/js/forum.js"></script>
+{% endblock %}

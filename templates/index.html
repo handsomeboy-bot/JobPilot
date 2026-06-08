@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}JobPilot — 求职追踪器{% endblock %}
+{% block content %}
+<section class="hero">
+    <h1>海投不迷路，用数据拿下 Offer</h1>
+    <p class="hero-sub">
+        拖拽看板管理投递进度 · 面试日程一目了然 · 面经复盘持续成长<br>
+        不只是投简历，是科学地经营你的求职
+    </p>
+    <div class="hero-btns">
+        <a href="/register" class="btn btn-primary btn-lg">免费开始使用</a>
+        <a href="/login" class="btn btn-outline btn-lg">已有账号？登录</a>
+    </div>
+    <div class="hero-preview">
+        <div class="kanban-preview">
+            <div class="kp-col"><div class="kp-head">📥 已投递</div><div class="kp-card">字节跳动<br><small>后端开发</small></div><div class="kp-card">腾讯<br><small>数据分析</small></div></div>
+            <div class="kp-col"><div class="kp-head">📝 测评中</div><div class="kp-card">美团<br><small>前端开发</small></div></div>
+            <div class="kp-col"><div class="kp-head">🎤 面试中</div><div class="kp-card kp-active">阿里巴巴<br><small>后端开发 · 二面</small></div></div>
+            <div class="kp-col"><div class="kp-head">⏳ 等结果</div><div class="kp-card">小红书<br><small>产品经理</small></div></div>
+            <div class="kp-col"><div class="kp-head">✅ Offer</div><div class="kp-card kp-offer">京东<br><small>软件开发</small></div></div>
+        </div>
+    </div>
+</section>
+
+<section class="features">
+    <div class="feature-card">
+        <div class="feature-icon">📋</div>
+        <h3>Kanban 看板</h3>
+        <p>拖拽卡片切换状态，投递进度一目了然</p>
+    </div>
+    <div class="feature-card">
+        <div class="feature-icon">📊</div>
+        <h3>数据统计</h3>
+        <p>投递趋势、渠道转化、通过率 — 用数字指导策略</p>
+    </div>
+    <div class="feature-card">
+        <div class="feature-icon">📅</div>
+        <h3>面试日程</h3>
+        <p>面试安排井井有条，绝不漏掉任何一场</p>
+    </div>
+    <div class="feature-card">
+        <div class="feature-icon">📝</div>
+        <h3>面经归档</h3>
+        <p>每场面试题复盘存档，越面越强</p>
+    </div>
+</section>
+{% endblock %}

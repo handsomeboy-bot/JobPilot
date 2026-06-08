@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block title %}注册 — JobPilot{% endblock %}
+{% block content %}
+<div class="auth-page">
+    <div class="auth-card">
+        <h2>🚀 创建你的账号</h2>
+        <p class="auth-sub" id="regSub">免费注册，开始管理你的求职之旅</p>
+
+        <form id="registerForm" onsubmit="handleRegister(event)">
+            <div class="form-group">
+                <label for="username">昵称</label>
+                <input type="text" id="username" name="username" required placeholder="怎么称呼你？">
+            </div>
+            <div class="form-group" id="emailGroup">
+                <label for="email">邮箱</label>
+                <input type="email" id="email" name="email" placeholder="your@email.com">
+            </div>
+            <div class="form-group">
+                <label for="password">密码</label>
+                <input type="password" id="password" required placeholder="至少6位密码" minlength="6">
+            </div>
+            <div class="form-group">
+                <label for="password2">确认密码</label>
+                <input type="password" id="password2" required placeholder="再输入一次密码" minlength="6">
+            </div>
+            <div class="form-error" id="regError"></div>
+            <button type="submit" class="btn btn-primary btn-block" id="regBtn">注册</button>
+        </form>
+        <p class="auth-footer">已有账号？<a href="/login">去登录 →</a></p>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+let inviteRequired = false;
+
+async function init() {
+    try {
+        const r = await fetch('/api/invite-required');
+        const d = await r.json();
+        inviteRequired = d.ok && d.required;
+        if (inviteRequired) {
+            document.getElementById('regSub').textContent = '先填写账号信息，再通过邀请码验证';
+            document.getElementById('emailGroup').style.display = 'none';
+        }
+    } catch(e) {}
+}
+init();
+
+async function handleRegister(e) {
+    e.preventDefault();
+    const btn = document.getElementById('regBtn');
+    const err = document.getElementById('regError');
+    const username = document.getElementById('username').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const pw = document.getElementById('password').value;
+    const pw2 = document.getElementById('password2').value;
+
+    if (!username) { err.textContent = '请输入昵称'; return; }
+    if (pw.length < 6) { err.textContent = '密码至少6位'; return; }
+    if (pw !== pw2) { err.textContent = '两次密码不一致'; return; }
+
+    btn.disabled = true; btn.textContent = '注册中...'; err.textContent = '';
+
+    if (inviteRequired) {
+        // 需要邀请码 → 暂存信息，跳转到邀请码页
+        sessionStorage.setItem('reg_username', username);
+        sessionStorage.setItem('reg_password', pw);
+        window.location.href = '/invite';
+        return;
+    }
+
+    // 不需要邀请码 → 直接注册
+    if (!email) { err.textContent = '请输入邮箱'; btn.disabled = false; btn.textContent = '注册'; return; }
+
+    const form = new FormData();
+    form.append('username', username);
+    form.append('email', email);
+    form.append('password', pw);
+
+    try {
+        const r = await fetch('/api/auth/register', { method: 'POST', body: form });
+        const data = await r.json();
+        if (data.ok) {
+            window.location.href = '/app';
+        } else {
+            err.textContent = data.msg;
+        }
+    } catch (e) {
+        err.textContent = '网络错误，请重试';
+    }
+    btn.disabled = false; btn.textContent = '注册';
+}
+</script>
+{% endblock %}

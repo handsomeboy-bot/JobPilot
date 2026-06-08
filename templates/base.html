@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}JobPilot{% endblock %}</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚀</text></svg>">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container nav-inner">
+            <a href="/" class="nav-brand">🚀 JobPilot</a>
+            <div class="nav-links">
+                {% if user %}
+                    <span class="nav-user">👋 {{ user.username }}</span>
+                    <a href="/app" class="btn btn-sm">看板</a>
+                    <a href="/forum" class="btn btn-sm">💬 论坛</a>
+                    <div style="position:relative;display:inline-block;" id="notifBell">
+                        <a href="#" class="btn btn-sm btn-outline" onclick="event.preventDefault();toggleNotifDropdown();">🔔</a>
+                        <span id="notifBadge" style="display:none;position:absolute;top:-4px;right:-4px;background:#EF4444;color:#fff;
+                            border-radius:50%;width:18px;height:18px;font-size:.65rem;text-align:center;line-height:18px;pointer-events:none;">0</span>
+                    </div>
+                    <a href="#" class="btn btn-sm btn-outline" onclick="logout()">退出</a>
+                {% else %}
+                    <a href="/login" class="btn btn-sm">登录</a>
+                    <a href="/register" class="btn btn-sm btn-primary">免费注册</a>
+                {% endif %}
+            </div>
+        </div>
+        <div id="notifDropdown" style="display:none;position:absolute;top:100%;right:20px;width:320px;max-height:400px;
+            overflow-y:auto;background:var(--bg);border:1px solid var(--border);border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,0.12);
+            z-index:1000;"></div>
+    </nav>
+
+    <main class="container">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>© 2026 JobPilot — 用数据优化你的求职策略</p>
+        </div>
+    </footer>
+
+    <script>
+        async function logout() {
+            await fetch('/api/auth/logout', { method: 'POST' });
+            window.location.href = '/';
+        }
+    </script>
+    {% if user %}
+    <script src="/static/js/forum.js"></script>
+    {% endif %}
+    {% block scripts %}{% endblock %}
+</body>
+</html>
