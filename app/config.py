@@ -23,6 +23,10 @@ DB_URL = os.getenv("DATABASE_URL", f"sqlite:///{os.path.join(BASE_DIR, 'jobpilot
 # Render 的 DATABASE_URL 以 postgres:// 开头，SQLAlchemy 需要 postgresql://
 if DB_URL and DB_URL.startswith("postgres://"):
     DB_URL = DB_URL.replace("postgres://", "postgresql://", 1)
+# PostgreSQL 强制 UTF-8 编码
+if DB_URL and "postgresql" in DB_URL and "client_encoding" not in DB_URL:
+    sep = "&" if "?" in DB_URL else "?"
+    DB_URL += f"{sep}client_encoding=utf8"
 DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY", "")
 DEEPSEEK_BASE_URL = "https://api.deepseek.com/v1/chat/completions"
 
