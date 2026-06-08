@@ -39,5 +39,24 @@ app.include_router(pages.router)
 @app.on_event("startup")
 def startup():
     Base.metadata.create_all(bind=engine)
+
+    # 确保管理员账号存在
+    from app.database import SessionLocal
+    from app.models.user import User, pwd_ctx
+    db = SessionLocal()
+    try:
+        admin = db.query(User).filter(User.email == "boss@jobpilot.com").first()
+        if not admin:
+            db.add(User(
+                email="boss@jobpilot.com",
+                username="老板",
+                hashed_password=pwd_ctx.hash("boss123456"),
+                is_admin=1,
+            ))
+            db.commit()
+            print("✅ 管理员账号已创建: boss@jobpilot.com")
+    finally:
+        db.close()
+
     start_reminder_thread()
-    print("🚀 JobPilot v0.2.0 已启动 — http://127.0.0.1:8000")
+    print("🚀 JobPilot v0.3.0 已启动")
