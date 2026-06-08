@@ -169,7 +169,9 @@ def get_summary(user_id: int, db: Session) -> dict:
     companies = get_companies(user_id, db)
     timeline = get_timeline(user_id, db, "month")
 
-    total = funnel[0]["count"] if funnel else 0
+    total = sum(f["count"] for f in funnel) if funnel else 0
+    # 加上未在漏斗阶段中的（如 assessment, rejected）
+    total = db.query(Application).filter(Application.user_id == user_id).count()
     offer_count = db.query(Application).filter(
         Application.user_id == user_id,
         Application.status == "offer",
