@@ -7,5 +7,7 @@ import uvicorn
 
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 8000))
-    host = "0.0.0.0" if os.getenv("RAILWAY_ENV") else "127.0.0.1"
-    uvicorn.run("app.main:app", host=host, port=port, reload=host == "127.0.0.1")
+    # 云平台（Render/Railway）会设 PORT 环境变量，需要监听 0.0.0.0
+    is_cloud = bool(os.getenv("PORT") or os.getenv("RENDER") or os.getenv("RAILWAY_ENV"))
+    host = "0.0.0.0" if is_cloud else "127.0.0.1"
+    uvicorn.run("app.main:app", host=host, port=port, reload=not is_cloud)
