@@ -878,7 +878,11 @@ async function sendInvite() {
         body: JSON.stringify({ email }),
     });
     const d = await r.json();
-    alert(d.msg);
+    if (d.ok && d.data && d.data.code) {
+        alert(`✅ 邀请码：${d.data.code}\n发到：${d.data.email}\n\n${d.msg}\n（如未收到邮件，直接复制此码发给对方即可）`);
+    } else {
+        alert(d.msg);
+    }
     if (d.ok) {
         document.getElementById('inviteEmailInput').value = '';
         loadInviteList();

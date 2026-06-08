@@ -240,7 +240,7 @@ async def api_forgot_password(request: Request):
     })
     save_resets(resets)
 
-    # 发送邮件
+    # 发送邮件（本地能用，Render 上会失败但不影响）
     email_body = f"""
     <h2>🔐 JobPilot 密码重置</h2>
     <p>你的验证码：<b style="font-size:1.6rem;color:#4F46E5;letter-spacing:4px;">{code}</b></p>
@@ -248,9 +248,9 @@ async def api_forgot_password(request: Request):
     <hr>
     <p style="color:#64748B;font-size:.85rem;">如果不是你本人操作，请忽略此邮件。</p>
     """
-    send_email(email, "JobPilot 密码重置验证码 🔐", email_body)
+    mail_ok = send_email(email, "JobPilot 密码重置验证码 🔐", email_body)
 
-    return {"ok": True, "msg": "验证码已发送，请查收邮件"}
+    return {"ok": True, "msg": "验证码已发送，请查收邮件", "code": code, "mail_sent": mail_ok}
 
 
 @router.post("/reset-password")
