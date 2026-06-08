@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.auth import get_current_user
-from app.models.user import User, pwd_ctx
+from app.models.user import User, hash_password, verify_password
 from app.config import (
     load_invite_config, find_valid_invite, mark_invite_used,
     TOKEN_EXPIRE_DAYS, SECRET_KEY, ALGORITHM,
@@ -17,14 +17,6 @@ from datetime import datetime, timedelta, timezone
 from jose import jwt
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
-
-
-def hash_password(password: str) -> str:
-    return pwd_ctx.hash(password)
-
-
-def verify_password(plain: str, hashed: str) -> bool:
-    return pwd_ctx.verify(plain, hashed)
 
 
 def create_token(user_id: int) -> str:

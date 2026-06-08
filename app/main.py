@@ -42,7 +42,7 @@ def startup():
 
     # 确保管理员账号存在
     from app.database import SessionLocal
-    from app.models.user import User, pwd_ctx
+    from app.models.user import User, hash_password
     db = SessionLocal()
     try:
         admin = db.query(User).filter(User.email == "boss@jobpilot.com").first()
@@ -50,7 +50,7 @@ def startup():
             db.add(User(
                 email="boss@jobpilot.com",
                 username="老板",
-                hashed_password=pwd_ctx.hash("boss123456"),
+                hashed_password=hash_password("boss123456"),
                 is_admin=1,
             ))
             db.commit()
