@@ -8,8 +8,6 @@ from fastapi.staticfiles import StaticFiles
 
 from app.config import BASE_DIR
 from app.database import Base, engine
-from app.services.interview_reminder import start_reminder_thread
-
 # 导入所有模型，确保 create_all 能发现
 from app.models.user import User  # noqa: F401
 from app.models.application import Application  # noqa: F401
@@ -58,5 +56,4 @@ def startup():
     finally:
         db.close()
 
-    start_reminder_thread()
     print("🚀 JobPilot v0.3.0 已启动")

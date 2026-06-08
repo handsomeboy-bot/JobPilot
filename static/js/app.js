@@ -814,17 +814,17 @@ async function deleteNote(id) {
 // ============================================================
 async function openEmailSettings() {
     document.getElementById('emailModal').classList.add('open');
+    // 加载邀请码配置
     try {
-        const r = await fetch('/api/email-config');
+        const r = await fetch('/api/invite-config');
         const d = await r.json();
         if (d.ok) {
-            document.getElementById('emailEnabled').checked = d.data.enabled;
-            document.getElementById('smtpHost').value = d.data.smtp_host;
-            document.getElementById('smtpPort').value = d.data.smtp_port;
-            document.getElementById('emailSender').value = d.data.sender;
-            document.getElementById('emailReceiver').value = d.data.receiver || '';
+            document.getElementById('inviteEnabled').checked = d.data.enabled;
+            document.getElementById('inviteCodeInput').value = d.data.code !== '***' ? d.data.code : '';
+            toggleInviteInput();
         }
     } catch(e) {}
+    loadInviteList();
 }
 
 function closeEmailSettings() {
@@ -915,33 +915,6 @@ async function revokeInvite(code) {
     if (!confirm('确定撤销这个邀请码吗？')) return;
     await fetch('/api/invites/' + encodeURIComponent(code), { method: 'DELETE' });
     loadInviteList();
-}
-
-async function saveEmailConfig(e) {
-    e.preventDefault();
-    const body = {
-        enabled: document.getElementById('emailEnabled').checked,
-        smtp_host: document.getElementById('smtpHost').value,
-        smtp_port: parseInt(document.getElementById('smtpPort').value),
-        sender: document.getElementById('emailSender').value,
-        receiver: document.getElementById('emailReceiver').value,
-    };
-    const pw = document.getElementById('emailPassword').value;
-    if (pw) body.password = pw;
-
-    const r = await fetch('/api/email-config', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-    });
-    const d = await r.json();
-    alert(d.msg || (d.ok ? '保存成功' : '保存失败'));
-}
-
-async function testEmail() {
-    const r = await fetch('/api/email-test', { method: 'POST' });
-    const d = await r.json();
-    alert(d.msg);
 }
 
 // ---- 修改密码 ----

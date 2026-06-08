@@ -320,45 +320,6 @@
             <button type="submit" class="btn btn-primary btn-block" style="margin-bottom:16px;">🔐 修改密码</button>
         </form>
 
-        <hr style="border-color:var(--border);margin-bottom:16px;">
-
-        <!-- 邮件设置 -->
-        <h4 style="margin-bottom:10px;">📧 邮件通知</h4>
-        <form id="emailForm" onsubmit="saveEmailConfig(event)">
-            <div class="form-group">
-                <label>
-                    <input type="checkbox" id="emailEnabled" style="width:auto;margin-right:8px;">
-                    启用邮件提醒（面试前1小时自动发送）
-                </label>
-            </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="smtpHost">SMTP服务器</label>
-                    <input type="text" id="smtpHost" placeholder="smtp.qq.com" value="smtp.qq.com">
-                </div>
-                <div class="form-group">
-                    <label for="smtpPort">端口</label>
-                    <input type="number" id="smtpPort" value="587">
-                </div>
-            </div>
-            <div class="form-group">
-                <label for="emailSender">发件邮箱</label>
-                <input type="email" id="emailSender" placeholder="your@qq.com">
-            </div>
-            <div class="form-group">
-                <label for="emailPassword">授权码（不是邮箱密码）</label>
-                <input type="password" id="emailPassword" placeholder="QQ邮箱→设置→账户→POP3/SMTP→生成授权码">
-                <small style="color:var(--text-muted);">留空则保持原有密码</small>
-            </div>
-            <div class="form-group">
-                <label for="emailReceiver">收件邮箱（留空则发给自己）</label>
-                <input type="email" id="emailReceiver" placeholder="可选，不填默认发到发件邮箱">
-            </div>
-            <div style="display:flex;gap:8px;">
-                <button type="button" class="btn btn-outline" onclick="testEmail()" style="flex:1;">🧪 发送测试邮件</button>
-                <button type="submit" class="btn btn-primary" style="flex:1;">💾 保存配置</button>
-            </div>
-        </form>
     </div>
 </div>
 
