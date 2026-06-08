@@ -19,7 +19,10 @@ if os.path.exists(_env_file):
 SECRET_KEY = os.getenv("SECRET_KEY", "jobpilot-dev-2026-keep-it-secret")
 ALGORITHM = "HS256"
 TOKEN_EXPIRE_DAYS = 7
-DB_URL = f"sqlite:///{os.path.join(BASE_DIR, 'jobpilot.db')}"
+DB_URL = os.getenv("DATABASE_URL", f"sqlite:///{os.path.join(BASE_DIR, 'jobpilot.db')}")
+# Render 的 DATABASE_URL 以 postgres:// 开头，SQLAlchemy 需要 postgresql://
+if DB_URL and DB_URL.startswith("postgres://"):
+    DB_URL = DB_URL.replace("postgres://", "postgresql://", 1)
 DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY", "")
 DEEPSEEK_BASE_URL = "https://api.deepseek.com/v1/chat/completions"
 
