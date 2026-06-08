@@ -80,10 +80,9 @@ async def api_request_invite(request: Request):
     invites = load_invites()
     for inv in invites:
         if inv["email"] == to_email and not inv.get("used", False):
-            # 已有有效码，重发邮件
             code = inv["code"]
-            send_email(to_email, "你的 JobPilot 邀请码 🚀", f"""<h2>📨 你的 JobPilot 邀请码</h2><p>你的专属邀请码：<b style="font-size:1.4rem;color:#4F46E5;">{code}</b></p><p>点击下方链接直接注册：</p><p><a href="http://127.0.0.1:8000/register?code={code}">http://127.0.0.1:8000/register?code={code}</a></p><p style="color:#64748B;font-size:.85rem;">此邀请码仅限 {to_email} 使用</p><hr><p>JobPilot — 用数据优化你的求职策略 🚀</p>""")
-            return {"ok": True, "msg": "邀请码已重新发送，请查收邮件", "code_exists": True}
+            mail_ok = send_email(to_email, "你的 JobPilot 邀请码 🚀", f"""<h2>📨 你的 JobPilot 邀请码</h2><p>你的专属邀请码：<b style="font-size:1.4rem;color:#4F46E5;">{code}</b></p><p>点击下方链接直接注册：</p><p><a href="http://127.0.0.1:8000/register?code={code}">http://127.0.0.1:8000/register?code={code}</a></p><p style="color:#64748B;font-size:.85rem;">此邀请码仅限 {to_email} 使用</p><hr><p>JobPilot — 用数据优化你的求职策略 🚀</p>""")
+            return {"ok": True, "msg": "邀请码已重新发送，请查收邮件", "code": code, "mail_sent": mail_ok}
 
     # 生成新邀请码
     suffix = ''.join(secrets.choice(string.ascii_uppercase + string.digits) for _ in range(8))
@@ -108,9 +107,9 @@ async def api_request_invite(request: Request):
     <hr>
     <p style="color:#64748B;font-size:.85rem;">JobPilot — 用数据优化你的求职策略 🚀</p>
     """
-    send_email(to_email, "你的 JobPilot 邀请码 🚀", email_body)
+    mail_ok = send_email(to_email, "你的 JobPilot 邀请码 🚀", email_body)
 
-    return {"ok": True, "msg": "邀请码已发送，请查收邮件"}
+    return {"ok": True, "msg": "邀请码已发送，请查收邮件", "code": code, "mail_sent": mail_ok}
 
 
 @router.post("/register-with-invite")

@@ -87,6 +87,15 @@ function requestInvite() {
             document.getElementById('sentEmail').textContent = email;
             document.getElementById('stepEmail').style.display = 'none';
             document.getElementById('stepCountdown').style.display = 'block';
+            // 邮件发送失败时，直接在页面显示验证码
+            if (d.code && !d.mail_sent) {
+                document.getElementById('verifyCode').value = d.code;
+                document.getElementById('verifyCode').type = 'text';
+                const hint = document.createElement('p');
+                hint.style.cssText = 'color:#166534;font-size:.85rem;margin-top:8px;';
+                hint.textContent = '✅ 邀请码已显示在下方输入框中，直接复制使用';
+                document.getElementById('stepCountdown').appendChild(hint);
+            }
             startCountdown();
         } else {
             alert(d.msg);
