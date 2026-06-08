@@ -96,3 +96,37 @@ def mark_invite_used(code: str):
             inv["used"] = True
             inv["used_at"] = __import__("datetime").datetime.now().strftime("%Y-%m-%d %H:%M")
     save_invites(invites)
+
+
+# — 密码重置 —
+RESETS_FILE = Path(BASE_DIR) / "password_resets.json"
+
+
+def load_resets() -> list[dict]:
+    if RESETS_FILE.exists():
+        return json.loads(RESETS_FILE.read_text(encoding="utf-8"))
+    return []
+
+
+def save_resets(resets: list[dict]):
+    RESETS_FILE.write_text(json.dumps(resets, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+def find_reset(email: str, code: str) -> dict | None:
+    from datetime import datetime, timezone
+    resets = load_resets()
+    now = datetime.now(timezone.utc)
+    for r in resets:
+        if r["email"] == email and r["code"] == code and not r.get("used"):
+            expires = datetime.fromisoformat(r["expires_at"])
+            if now < expires.replace(tzinfo=timezone.utc):
+                return r
+    return None
+
+
+def mark_reset_used(email: str, code: str):
+    resets = load_resets()
+    for r in resets:
+        if r["email"] == email and r["code"] == code:
+            r["used"] = True
+    save_resets(resets)

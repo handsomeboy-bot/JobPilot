@@ -21,6 +21,11 @@ def page_login(request: Request):
     return render("login.html", {"user": None})
 
 
+@router.get("/forgot-password", response_class=HTMLResponse)
+def page_forgot(request: Request):
+    return render("forgot_password.html", {"request": request, "user": None})
+
+
 @router.get("/register", response_class=HTMLResponse)
 def page_register(request: Request):
     return render("register.html", {"request": request, "user": None})
