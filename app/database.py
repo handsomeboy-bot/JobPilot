@@ -8,7 +8,7 @@ from app.config import DB_URL
 
 # SQLite 需要 check_same_thread, PostgreSQL 需要 utf8 编码
 _is_sqlite = DB_URL.startswith("sqlite")
-_connect_args = {"check_same_thread": False} if _is_sqlite else {"client_encoding": "utf8"}
+_connect_args = {"check_same_thread": False} if _is_sqlite else {"options": "-c client_encoding=utf8"}
 engine = create_engine(DB_URL, connect_args=_connect_args)
 SessionLocal = sessionmaker(bind=engine, autoflush=False)
 Base = declarative_base()
