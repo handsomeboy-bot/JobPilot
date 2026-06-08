@@ -13,7 +13,6 @@ __pycache__/
 # 运行时文件（含敏感数据）
 notified_interviews.json
 email_config.json
-invite_config.json
 invites.json
 password_resets.json
 
